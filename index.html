@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Cycle Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Work+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #241720;
+    --card: #2e1e29;
+    --cream: #f1e6d6;
+    --cream-dim: #cbb9a8;
+    --menstrual: #7a2f3d;
+    --follicular: #7c8a56;
+    --ovulatory: #c99a3a;
+    --luteal: #8a5a3f;
+    --line: rgba(241,230,214,0.14);
+  }
+  *{ box-sizing: border-box; }
+  body{
+    margin:0;
+    background: var(--bg);
+    color: var(--cream);
+    font-family: 'Work Sans', sans-serif;
+    display:flex;
+    justify-content:center;
+    padding: 32px 16px 60px;
+  }
+  .card{
+    width:100%;
+    max-width: 440px;
+  }
+  h1{
+    font-family:'Fraunces', serif;
+    font-weight:500;
+    font-size: 1.5rem;
+    letter-spacing: 0.01em;
+    margin: 0 0 4px;
+    color: var(--cream);
+  }
+  .sub{
+    color: var(--cream-dim);
+    font-size: 0.85rem;
+    margin: 0 0 28px;
+    line-height:1.5;
+  }
+  .wheel-wrap{
+    position: relative;
+    width: 100%;
+    max-width: 340px;
+    margin: 0 auto 28px;
+  }
+  svg{ width:100%; height:auto; display:block; }
+  .center-label{
+    position:absolute;
+    top:50%; left:50%;
+    transform: translate(-50%,-50%);
+    text-align:center;
+    pointer-events:none;
+  }
+  .center-day{
+    font-family:'Fraunces', serif;
+    font-size: 2.6rem;
+    font-weight:500;
+    line-height:1;
+  }
+  .center-phase{
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+    color: var(--cream-dim);
+    margin-top: 4px;
+  }
+  .phase-panel{
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 20px 22px;
+    margin-bottom: 16px;
+  }
+  .phase-panel .name{
+    font-family:'Fraunces', serif;
+    font-size: 1.15rem;
+    margin: 0 0 8px;
+  }
+  .phase-panel p{
+    margin: 0 0 10px;
+    font-size: 0.92rem;
+    line-height: 1.6;
+    color: var(--cream-dim);
+  }
+  .phase-panel p:last-child{ margin-bottom:0; }
+  .phase-panel .flow-tag{
+    display:inline-block;
+    font-size: 0.72rem;
+    color: var(--bg);
+    background: var(--phase-color, var(--ovulatory));
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-bottom: 12px;
+  }
+  .subhead{
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+    color: var(--cream-dim);
+    margin: 0 0 6px;
+  }
+  .bullets{
+    margin: 0;
+    padding-left: 18px;
+    font-size: 0.88rem;
+    line-height: 1.55;
+    color: var(--cream-dim);
+  }
+  .bullets li{ margin-bottom: 4px; }
+  .next-panel{
+    background: transparent;
+    border: 1px dashed var(--line);
+  }
+  .next-panel .headline{
+    display:flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 10px;
+  }
+  .next-panel .headline .name{ margin:0; }
+  .next-panel .countdown{
+    font-size: 0.8rem;
+    color: var(--cream-dim);
+    white-space: nowrap;
+  }
+  .start-callout{
+    border-left: 3px solid var(--follicular);
+    background: rgba(124,138,86,0.08);
+    padding: 14px 16px;
+    border-radius: 4px;
+    margin-bottom: 20px;
+  }
+  .start-callout .label{
+    font-size: 0.68rem;
+    letter-spacing: 0.06em;
+    color: var(--follicular);
+    margin-bottom: 5px;
+  }
+  .start-callout .line{
+    font-size: 0.92rem;
+    line-height: 1.5;
+  }
+  .timeline{
+    display:flex;
+    gap: 2px;
+    margin: 4px 0 6px;
+  }
+  .timeline .day{
+    flex:1;
+    height: 22px;
+    border-radius: 2px;
+    position: relative;
+  }
+  .timeline .day.today{
+    outline: 2px solid var(--cream);
+    outline-offset: 1px;
+  }
+  .timeline-labels{
+    display:flex;
+    justify-content: space-between;
+    font-size: 0.65rem;
+    color: var(--cream-dim);
+    margin-bottom: 20px;
+  }
+  details{
+    border-top: 1px solid var(--line);
+    padding-top: 14px;
+  }
+  summary{
+    cursor:pointer;
+    font-size: 0.82rem;
+    color: var(--cream-dim);
+    list-style: none;
+  }
+  summary::-webkit-details-marker{ display:none; }
+  summary:before{
+    content: "◦ ";
+  }
+  .settings{
+    display:flex;
+    gap: 12px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+  }
+  .field{
+    flex: 1;
+    min-width: 130px;
+  }
+  label{
+    display:block;
+    font-size: 0.72rem;
+    color: var(--cream-dim);
+    margin-bottom: 5px;
+  }
+  input{
+    width:100%;
+    background: var(--bg);
+    border: 1px solid var(--line);
+    color: var(--cream);
+    padding: 8px 10px;
+    border-radius: 4px;
+    font-family: 'Work Sans', sans-serif;
+    font-size: 0.9rem;
+  }
+  input:focus{ outline: 1px solid var(--cream-dim); }
+  button{
+    margin-top: 14px;
+    background: var(--cream);
+    color: var(--bg);
+    border: none;
+    padding: 9px 16px;
+    border-radius: 4px;
+    font-family: 'Work Sans', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button:hover{ opacity:0.9; }
+  .status{
+    font-size: 0.75rem;
+    color: var(--cream-dim);
+    margin-top: 8px;
+    min-height: 1em;
+  }
+  .legend{
+    display:flex;
+    justify-content: space-between;
+    margin-top: 18px;
+    font-size: 0.68rem;
+    color: var(--cream-dim);
+  }
+  .legend span{ display:flex; align-items:center; gap:5px; }
+  .dot{ width:8px; height:8px; border-radius:50%; display:inline-block; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>Cycle Map</h1>
+  <p class="sub">A day-by-day view of where you are, and the shape creative flow tends to take there.</p>
+
+  <div class="wheel-wrap">
+    <svg id="wheel" viewBox="0 0 320 320"></svg>
+    <div class="center-label">
+      <div class="center-day" id="centerDay">—</div>
+      <div class="center-phase" id="centerPhase">set your dates below</div>
+    </div>
+  </div>
+
+  <div class="phase-panel" id="phasePanel">
+    <span class="flow-tag" id="flowTag">—</span>
+    <div class="name" id="phaseName">No data yet</div>
+    <p id="phaseDesc">Enter your last cycle start date to see today's phase and its creative character.</p>
+    <div class="subhead" id="whatsHappeningLabel"></div>
+    <p id="whatsHappening"></p>
+    <div class="subhead" id="bestForLabel"></div>
+    <ul class="bullets" id="bestFor"></ul>
+    <div class="subhead" id="avoidLabel"></div>
+    <p id="avoid" style="margin-bottom:0"></p>
+  </div>
+
+  <div class="phase-panel" id="nutritionPanel">
+    <div class="subhead" style="margin-bottom:8px;">nutrition for this phase</div>
+    <p id="nutritionFocus" style="margin-bottom:12px;"></p>
+    <div class="subhead" id="nutritionFoodsLabel">lean on</div>
+    <ul class="bullets" id="nutritionFoods"></ul>
+    <div class="subhead" id="nutritionConsiderLabel" style="margin-top:12px;">also consider</div>
+    <p id="nutritionConsider" style="margin-bottom:0"></p>
+  </div>
+
+  <div class="phase-panel next-panel" id="nextPanel">
+    <div class="headline">
+      <div class="name" id="nextName">Next phase</div>
+      <div class="countdown" id="nextCountdown">—</div>
+    </div>
+    <div class="subhead">how to prepare now</div>
+    <ul class="bullets" id="nextPrep"></ul>
+  </div>
+
+  <div class="start-callout" id="startCallout">
+    <div class="label">best window to start something new</div>
+    <div class="line" id="startLine">Set your dates to see this.</div>
+  </div>
+
+  <div class="timeline" id="timelineStrip"></div>
+  <div class="timeline-labels">
+    <span>today</span>
+    <span id="timelineEnd">+13 days</span>
+  </div>
+
+  <details id="settingsBlock">
+    <summary>Cycle settings</summary>
+    <div class="settings">
+      <div class="field">
+        <label for="startDate">Last cycle start date</label>
+        <input type="date" id="startDate">
+      </div>
+      <div class="field">
+        <label for="cycleLen">Cycle length (days)</label>
+        <input type="number" id="cycleLen" min="15" max="45" value="28">
+      </div>
+      <div class="field">
+        <label for="periodLen">Period length (days)</label>
+        <input type="number" id="periodLen" min="1" max="10" value="5">
+      </div>
+    </div>
+    <button id="saveBtn">Save & update map</button>
+    <div class="status" id="status"></div>
+  </details>
+
+  <div class="legend">
+    <span><i class="dot" style="background:var(--menstrual)"></i>Menstrual</span>
+    <span><i class="dot" style="background:var(--follicular)"></i>Follicular</span>
+    <span><i class="dot" style="background:var(--ovulatory)"></i>Ovulatory</span>
+    <span><i class="dot" style="background:var(--luteal)"></i>Luteal</span>
+  </div>
+</div>
+
+<script>
+const PHASES = {
+  menstrual: {
+    color: 'var(--menstrual)',
+    hex: '#7a2f3d',
+    name: 'Menstrual',
+    tag: 'release',
+    desc: [
+      "Energy turns inward. This is a natural low point for output, and pushing against it usually costs more than it returns.",
+      "Creative flow here is associative and image-based rather than linear — good for journaling, voice notes, collecting fragments, and letting half-formed ideas surface without judging them yet."
+    ],
+    whatsHappening: "Estrogen and progesterone are both at their lowest point of the cycle, which is generally read as the physiological low point for outward energy and drive.",
+    bestFor: ["Reflection and review of past work", "Journaling, voice memos, loose sketching", "Collecting reference material, not producing"],
+    avoid: "Avoid judging output by this phase's standards — it's a collecting phase, not a shipping phase.",
+    prepTips: [
+      "Close open loops from the luteal phase so nothing is left half-finished",
+      "Set out a notebook or voice-memo app for capturing fragments without pressure to shape them",
+      "Lower the bar for what counts as 'done' this week"
+    ],
+    nutrition: {
+      focus: "Replenish iron and stay warm — this is the phase with the most physical output going on.",
+      foods: ["Iron-rich foods: red meat, lentils, spinach, pumpkin seeds", "Vitamin C alongside iron sources to help absorption", "Warm, cooked meals over cold or raw", "Extra water — blood loss increases fluid needs"],
+      consider: "Magnesium-rich foods (dark chocolate, leafy greens) can ease cramping for some people. Caffeine and alcohol tend to be felt more strongly this week."
+    }
+  },
+  follicular: {
+    color: 'var(--follicular)',
+    hex: '#7c8a56',
+    name: 'Follicular',
+    tag: 'opening',
+    desc: [
+      "Energy rebuilds and curiosity sharpens. This is usually the easiest window to start something new or pick up a stalled thread.",
+      "Creative flow is expansive and exploratory — brainstorming, research, sketching options, and saying yes to more ideas than you'll keep."
+    ],
+    whatsHappening: "Estrogen begins rising steadily as the body prepares for ovulation, which tracks with rising energy, mood, and openness to new ideas for most people.",
+    bestFor: ["Starting new projects", "Brainstorming, research, wide idea generation", "Learning new tools or techniques"],
+    avoid: "Avoid over-committing to the first idea — this phase generates options, it doesn't need to pick the winner yet.",
+    prepTips: [
+      "Shortlist 2–3 project ideas from what you collected during menstrual phase",
+      "Clear a block of open time — this phase rewards unstructured exploration",
+      "Line up any tools, references, or people you'll want to pull in early"
+    ],
+    nutrition: {
+      focus: "Support the rebuild — rising estrogen tracks with rising metabolic activity, so this is a good window for fresh, lighter food and building blocks for the rest of the cycle.",
+      foods: ["Lean protein and healthy fats to support hormone production", "Fermented foods (yogurt, kefir, sauerkraut) for gut health", "Fresh vegetables and sprouted foods", "Complex carbs for sustained energy as activity tends to rise"],
+      consider: "Energy and appetite are often naturally lower here than in the luteal phase — this is not a phase that needs restriction, just lighter, fresher choices tend to sit well."
+    }
+  },
+  ovulatory: {
+    color: 'var(--ovulatory)',
+    hex: '#c99a3a',
+    name: 'Ovulatory',
+    tag: 'peak',
+    desc: [
+      "This is typically the highest point for verbal fluency, confidence, and outward energy in the cycle.",
+      "Creative flow favors expression over incubation — pitching, recording, performing, launching, and any work that benefits from being seen."
+    ],
+    whatsHappening: "A sharp LH surge triggers ovulation, with estrogen peaking just before it — commonly associated with the cycle's high point for confidence and social energy.",
+    bestFor: ["Pitching, launching, publishing", "Recording, performing, presenting", "Any work that needs to be seen or heard by others"],
+    avoid: "Avoid starting deep solitary research here — the energy is outward-facing and doesn't sit still well.",
+    prepTips: [
+      "Have the follicular-phase idea polished enough to show",
+      "Book anything that needs a live audience — calls, recordings, pitches — for this window",
+      "Prepare talking points in advance; delivery will come easily, framing might not"
+    ],
+    nutrition: {
+      focus: "Support peak energy demand — estrogen and testosterone both peak around ovulation, which is generally the highest metabolic and energy point in the cycle.",
+      foods: ["Light, high-fiber meals: raw vegetables, salads, fruit", "Zinc-rich foods (pumpkin seeds, seafood) around ovulation", "Antioxidant-rich foods (berries, colorful vegetables)", "Stay well hydrated — this phase often runs a touch warmer"],
+      consider: "Appetite is often naturally lower here. Heavy or very rich meals right before something high-stakes (a pitch, a recording) can work against the energy this phase already gives you."
+    }
+  },
+  luteal: {
+    color: 'var(--luteal)',
+    hex: '#8a5a3f',
+    name: 'Luteal',
+    tag: 'refine',
+    desc: [
+      "Focus narrows and patience for detail tends to rise early on, before dropping off as the phase ends.",
+      "Creative flow is best spent editing, structuring, and finishing what's already started — this is a poor window to launch something brand new."
+    ],
+    whatsHappening: "Progesterone rises then falls sharply toward the end of the phase if pregnancy doesn't occur, which lines up with early-phase focus giving way to lower tolerance for ambiguity near the end.",
+    bestFor: ["Editing, structuring, finishing", "Detail work: formatting, proofing, quality passes", "Administrative and organizational tasks"],
+    avoid: "Avoid launching something new in the back half of this phase — irritability with loose ends tends to rise as it ends, which reads as harsher self-criticism than it is.",
+    prepTips: [
+      "Bring the ovulatory-phase project to a finishing point, not a starting point",
+      "Batch detail work — this phase has real patience for it early on",
+      "Plan for lower output in the final days rather than fighting it"
+    ],
+    nutrition: {
+      focus: "Steady blood sugar and support the progesterone rise — cravings and appetite typically increase here, and steadier blood sugar tends to smooth out the mood swings this phase is known for.",
+      foods: ["Complex carbs (whole grains, sweet potato) over refined sugar", "Calcium and magnesium-rich foods (leafy greens, nuts, seeds)", "Regular, smaller meals rather than large infrequent ones", "B-vitamin foods (eggs, whole grains, legumes) as energy tends to dip"],
+      consider: "Salt and caffeine sensitivity often rises in the last days of this phase — cutting back on both in the final week is a common way people reduce bloating and irritability. Cravings are normal here; the goal is steadier blood sugar, not elimination."
+    }
+  }
+};
+
+function phaseForDay(day, cycleLen, periodLen){
+  const follicularEnd = Math.round(cycleLen * 0.46);
+  const ovulatoryEnd = follicularEnd + Math.max(2, Math.round(cycleLen * 0.09));
+  if (day <= periodLen) return 'menstrual';
+  if (day <= follicularEnd) return 'follicular';
+  if (day <= ovulatoryEnd) return 'ovulatory';
+  return 'luteal';
+}
+
+function segmentsFor(cycleLen, periodLen){
+  const follicularEnd = Math.round(cycleLen * 0.46);
+  const ovulatoryEnd = follicularEnd + Math.max(2, Math.round(cycleLen * 0.09));
+  return [
+    { key:'menstrual', start:0, end:periodLen },
+    { key:'follicular', start:periodLen, end:follicularEnd },
+    { key:'ovulatory', start:follicularEnd, end:ovulatoryEnd },
+    { key:'luteal', start:ovulatoryEnd, end:cycleLen }
+  ];
+}
+
+function polar(cx, cy, r, angleDeg){
+  const a = (angleDeg - 90) * Math.PI / 180;
+  return { x: cx + r * Math.cos(a), y: cy + r * Math.sin(a) };
+}
+
+function arcPath(cx, cy, rOuter, rInner, startAngle, endAngle){
+  const p1 = polar(cx, cy, rOuter, startAngle);
+  const p2 = polar(cx, cy, rOuter, endAngle);
+  const p3 = polar(cx, cy, rInner, endAngle);
+  const p4 = polar(cx, cy, rInner, startAngle);
+  const largeArc = (endAngle - startAngle) % 360 > 180 ? 1 : 0;
+  return `M ${p1.x} ${p1.y} A ${rOuter} ${rOuter} 0 ${largeArc} 1 ${p2.x} ${p2.y} L ${p3.x} ${p3.y} A ${rInner} ${rInner} 0 ${largeArc} 0 ${p4.x} ${p4.y} Z`;
+}
+
+function drawWheel(cycleLen, periodLen, todayDay){
+  const svg = document.getElementById('wheel');
+  svg.innerHTML = '';
+  const cx = 160, cy = 160, rOuter = 148, rInner = 100;
+  const segs = segmentsFor(cycleLen, periodLen);
+  const ns = 'http://www.w3.org/2000/svg';
+
+  segs.forEach(seg => {
+    const startAngle = (seg.start / cycleLen) * 360;
+    const endAngle = (seg.end / cycleLen) * 360;
+    const path = document.createElementNS(ns, 'path');
+    path.setAttribute('d', arcPath(cx, cy, rOuter, rInner, startAngle, endAngle));
+    path.setAttribute('fill', PHASES[seg.key].hex);
+    path.setAttribute('opacity', seg.key === phaseForDay(todayDay, cycleLen, periodLen) ? '1' : '0.55');
+    svg.appendChild(path);
+  });
+
+  // day tick marks
+  for(let d = 0; d < cycleLen; d++){
+    const angle = (d / cycleLen) * 360;
+    const p1 = polar(cx, cy, rOuter, angle);
+    const p2 = polar(cx, cy, rOuter - 6, angle);
+    const tick = document.createElementNS(ns, 'line');
+    tick.setAttribute('x1', p1.x); tick.setAttribute('y1', p1.y);
+    tick.setAttribute('x2', p2.x); tick.setAttribute('y2', p2.y);
+    tick.setAttribute('stroke', '#241720');
+    tick.setAttribute('stroke-width', d % 7 === 0 ? '1.5' : '0.6');
+    tick.setAttribute('opacity', '0.5');
+    svg.appendChild(tick);
+  }
+
+  // today marker
+  if (todayDay !== null){
+    const angle = ((todayDay - 1) / cycleLen) * 360;
+    const pos = polar(cx, cy, (rOuter + rInner) / 2, angle);
+    const marker = document.createElementNS(ns, 'circle');
+    marker.setAttribute('cx', pos.x);
+    marker.setAttribute('cy', pos.y);
+    marker.setAttribute('r', 8);
+    marker.setAttribute('fill', '#f1e6d6');
+    marker.setAttribute('stroke', '#241720');
+    marker.setAttribute('stroke-width', 2);
+    svg.appendChild(marker);
+  }
+}
+
+function daysBetween(dateStr){
+  const start = new Date(dateStr + 'T00:00:00');
+  const now = new Date();
+  const nowMid = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const diff = Math.floor((nowMid - start) / (1000*60*60*24));
+  return diff;
+}
+
+function render(startDate, cycleLen, periodLen){
+  if (!startDate){
+    document.getElementById('centerDay').textContent = '—';
+    document.getElementById('centerPhase').textContent = 'set your dates below';
+    drawWheel(cycleLen, periodLen, null);
+    return;
+  }
+  const diff = daysBetween(startDate);
+  const dayInCycle = ((diff % cycleLen) + cycleLen) % cycleLen + 1;
+  const dayIndex = dayInCycle - 1;
+  const key = phaseForDay(dayInCycle, cycleLen, periodLen);
+  const phase = PHASES[key];
+  const segs = segmentsFor(cycleLen, periodLen);
+  const segOrder = ['menstrual','follicular','ovulatory','luteal'];
+
+  document.getElementById('centerDay').textContent = 'Day ' + dayInCycle;
+  document.getElementById('centerPhase').textContent = phase.name;
+
+  document.getElementById('flowTag').textContent = phase.tag;
+  document.getElementById('flowTag').style.setProperty('--phase-color', phase.color);
+  document.getElementById('phaseName').textContent = phase.name + ' phase';
+  document.getElementById('phaseDesc').innerHTML = phase.desc.map(p => `<p>${p}</p>`).join('');
+  document.getElementById('whatsHappeningLabel').textContent = "what's happening";
+  document.getElementById('whatsHappening').textContent = phase.whatsHappening;
+  document.getElementById('bestForLabel').textContent = 'best for right now';
+  document.getElementById('bestFor').innerHTML = phase.bestFor.map(b => `<li>${b}</li>`).join('');
+  document.getElementById('avoidLabel').textContent = 'watch out for';
+  document.getElementById('avoid').textContent = phase.avoid;
+
+  document.getElementById('nutritionFocus').textContent = phase.nutrition.focus;
+  document.getElementById('nutritionFoods').innerHTML = phase.nutrition.foods.map(f => `<li>${f}</li>`).join('');
+  document.getElementById('nutritionConsider').textContent = phase.nutrition.consider;
+
+  // next phase
+  const curSeg = segs.find(s => dayIndex >= s.start && dayIndex < s.end);
+  const curIdx = segOrder.indexOf(curSeg.key);
+  const nextKey = segOrder[(curIdx + 1) % 4];
+  const nextPhase = PHASES[nextKey];
+  const daysUntilNext = curSeg.end - dayIndex;
+  document.getElementById('nextName').textContent = nextPhase.name + ' next';
+  document.getElementById('nextCountdown').textContent = daysUntilNext === 1 ? 'starts tomorrow' : `in ${daysUntilNext} days`;
+  document.getElementById('nextPrep').innerHTML = nextPhase.prepTips.map(t => `<li>${t}</li>`).join('');
+
+  // best window to start something new: next follicular-phase start
+  const follSeg = segs.find(s => s.key === 'follicular');
+  let daysUntilFoll;
+  if (key === 'follicular'){
+    daysUntilFoll = 0;
+  } else {
+    daysUntilFoll = ((follSeg.start - dayIndex) % cycleLen + cycleLen) % cycleLen;
+  }
+  const startLine = document.getElementById('startLine');
+  if (daysUntilFoll === 0){
+    startLine.textContent = "You're in it right now — this is a strong window to pick a project and start.";
+  } else if (daysUntilFoll === 1){
+    startLine.textContent = "Opens tomorrow. Use today to shortlist ideas so you're ready to move.";
+  } else {
+    const target = new Date();
+    target.setDate(target.getDate() + daysUntilFoll);
+    const dateStr = target.toLocaleDateString(undefined, { month:'short', day:'numeric' });
+    startLine.textContent = `Opens in ${daysUntilFoll} days, around ${dateStr}. Ovulatory phase (day ${follSeg.end+1} area) is a secondary window if you need to launch something sooner.`;
+  }
+
+  // timeline strip: next 14 days
+  const stripEl = document.getElementById('timelineStrip');
+  stripEl.innerHTML = '';
+  for(let i = 0; i < 14; i++){
+    const idx = (dayIndex + i) % cycleLen;
+    const k = phaseForDay(idx + 1, cycleLen, periodLen);
+    const cell = document.createElement('div');
+    cell.className = 'day' + (i === 0 ? ' today' : '');
+    cell.style.background = PHASES[k].hex;
+    cell.title = 'Day ' + (idx+1) + ' — ' + PHASES[k].name;
+    stripEl.appendChild(cell);
+  }
+
+  drawWheel(cycleLen, periodLen, dayInCycle);
+}
+
+async function loadSaved(){
+  try{
+    const raw = localStorage.getItem('cycle-map-settings');
+    if (raw) return JSON.parse(raw);
+  }catch(e){ /* no saved data yet, or storage blocked */ }
+  return null;
+}
+
+async function saveSettings(data){
+  localStorage.setItem('cycle-map-settings', JSON.stringify(data));
+}
+
+async function init(){
+  const saved = await loadSaved();
+  if (saved && saved.startDate){
+    document.getElementById('startDate').value = saved.startDate || '';
+    document.getElementById('cycleLen').value = saved.cycleLen || 28;
+    document.getElementById('periodLen').value = saved.periodLen || 5;
+  } else {
+    document.getElementById('settingsBlock').setAttribute('open', '');
+  }
+  const s = document.getElementById('startDate').value;
+  const c = parseInt(document.getElementById('cycleLen').value, 10);
+  const p = parseInt(document.getElementById('periodLen').value, 10);
+  render(s, c, p);
+
+  document.getElementById('saveBtn').addEventListener('click', async () => {
+    const startDate = document.getElementById('startDate').value;
+    const cycleLen = parseInt(document.getElementById('cycleLen').value, 10) || 28;
+    const periodLen = parseInt(document.getElementById('periodLen').value, 10) || 5;
+    const statusEl = document.getElementById('status');
+
+    if (!startDate){
+      statusEl.textContent = 'Add a start date first.';
+      return;
+    }
+
+    render(startDate, cycleLen, periodLen);
+    try{
+      await saveSettings({ startDate, cycleLen, periodLen });
+      statusEl.textContent = 'Saved to this browser. It will remember it next time you open the page here.';
+      document.getElementById('settingsBlock').removeAttribute('open');
+    }catch(e){
+      statusEl.textContent = 'Updated, but could not save for next time — check that this browser allows local storage.';
+    }
+  });
+}
+
+init();
+</script>
+</body>
+</html>
